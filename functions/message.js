@@ -3,16 +3,18 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   let message = url.searchParams.get("text");
 
-  if (request.method === "POST") {
+  if (request.method === "POST" && !message) {
+    const contentType = request.headers.get("content-type") || "";
     try {
-      const body = await request.formData();
-      message = message || body.get("text");
-    } catch (e) {
-      // Fallback if not form data
-      try {
+      if (contentType.includes("application/json")) {
         const json = await request.json();
-        message = message || json.text;
-      } catch (e2) {}
+        message = json.text;
+      } else if (contentType.includes("form") || contentType.includes("multipart")) {
+        const formData = await request.formData();
+        message = formData.get("text");
+      }
+    } catch (e) {
+      console.error("Failed to parse POST body:", e);
     }
   }
 
