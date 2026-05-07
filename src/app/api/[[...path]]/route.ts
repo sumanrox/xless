@@ -17,9 +17,9 @@ export async function GET(req: NextRequest) {
   alert += `• *IP Address:* \`${ip}\`\n`;
   alert += `• *Request URI:* \`${pathname}\`\n`;
 
-  for (const [key, value] of req.headers.entries()) {
+  req.headers.forEach((value, key) => {
     alert += `• *${key}:* \`${value}\`\n`;
-  }
+  });
 
   const slack_webhook = process.env.SLACK_INCOMING_WEBHOOK;
   if (slack_webhook) {
