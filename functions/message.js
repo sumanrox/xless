@@ -14,13 +14,15 @@ export async function onRequest(context) {
         message = formData.get("text");
       }
     } catch (e) {
-      console.error("Failed to parse POST body:", e);
+      return new Response("Invalid request body\n", { status: 400 });
     }
   }
 
   if (!message) return new Response("Missing text\n", { status: 400 });
 
-  const alert = `*XSSless: Message Alert*\n\`\`\`\n${message}\n\`\`\`\n`;
+  // Truncate to avoid Slack limits
+  const truncatedMessage = message.length > 1024 ? message.substring(0, 1021) + "..." : message;
+  const alert = `*XSSless: Message Alert*\n\`\`\`\n${truncatedMessage}\n\`\`\`\n`;
 
   if (env.SLACK_INCOMING_WEBHOOK) {
     try {
