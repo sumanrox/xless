@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+
+export const runtime = 'edge';
 
 export async function GET(req: NextRequest) {
   const { pathname } = new URL(req.url);
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Generate OOB Callback Alert
-  const ip = req.headers.get('x-forwarded-for') || req.headers.get('remote-addr') || 'Unknown';
+  const ip = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for') || 'Unknown';
   let alert = '*XSSless: Out-of-Band Callback Alert*\n';
   alert += `• *IP Address:* \`${ip}\`\n`;
   alert += `• *Request URI:* \`${pathname}\`\n`;
@@ -37,10 +37,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Serve payload.js
+  // On Edge runtime, we fetch the payload from our own public directory
   try {
-    const payloadPath = path.join(process.cwd(), 'public', 'payload.js');
-    const payloadContent = fs.readFileSync(payloadPath, 'utf8');
+    const payloadUrl = new URL('/payload.js', req.url);
+    const payloadResponse = await fetch(payloadUrl);
+    const payloadContent = await payloadResponse.text();
+    
     return new NextResponse(payloadContent, {
       headers: {
         'Content-Type': 'application/javascript',
@@ -48,7 +50,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error reading payload.js:', error);
+    console.error('Error fetching payload.js:', error);
     return new NextResponse('console.error("Xless payload not found");', {
       headers: { 'Content-Type': 'application/javascript' }
     });

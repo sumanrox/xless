@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 export async function GET() {
   const health_data = {
     imgbb_api_key_set: !!process.env.IMGBB_API_KEY,
