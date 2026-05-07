@@ -1,6 +1,13 @@
 export async function onRequestPost(context) {
   const { request, env } = context;
-  const data = await request.json();
+
+  let data;
+  try {
+    data = await request.json();
+  } catch (e) {
+    return new Response("Invalid JSON\n", { status: 400 });
+  }
+
   const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "Unknown";
   data["Remote IP"] = ip;
 
@@ -30,7 +37,11 @@ export async function onRequestPost(context) {
   let alert = "*XSSless: Blind XSS Alert*\n";
   for (const [k, v] of Object.entries(data)) {
     if (k === "Screenshot") continue;
-    const value = (v === "" || v === undefined) ? "```None```" : `\n\`\`\`${v}\`\`\``;
+    let valStr = String(v);
+    if (valStr.length > 1024) {
+      valStr = valStr.substring(0, 1024) + "... (truncated)";
+    }
+    const value = (v === "" || v === undefined) ? "```None```" : `\n\`\`\`${valStr}\`\`\``;
     alert += `*${k}:* ${value}\n`;
   }
   if (screenshotUrl) {
